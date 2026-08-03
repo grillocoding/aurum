@@ -36,6 +36,7 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: rgba(201,169,97,0.3); border-radius: 4px; }
     </style>
+    /* Deu erro no meu pc /*
     @stack('styles')
 </head>
 <body class="min-h-screen bg-background">

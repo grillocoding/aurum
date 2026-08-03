@@ -13,7 +13,7 @@ class DashboardController extends Controller
     public function index()
     {
         $user = Auth::user();
-
+        // Deu erro no meu pc, por isso não tem commit
         // Últimos 6 meses (incluindo o atual), do mais antigo para o mais recente
         $months = collect(range(5, 0))->map(function ($i) {
             return Carbon::now()->subMonths($i)->startOfMonth();
