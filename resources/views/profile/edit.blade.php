@@ -119,18 +119,27 @@
                         </div>
                         <div>
                             <label class="block text-sm text-card-foreground mb-2">CNPJ</label>
-                            <input type="text" name="cnpj" value="{{ old('cnpj', $user->cnpj) }}"
-                                   class="w-full px-4 py-3 bg-input-background border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                            <div class="flex gap-2">
+                                <input type="text" name="cnpj" id="cnpjInput" maxlength="18" placeholder="00.000.000/0001-00"
+                                       value="{{ old('cnpj', $user->cnpj) }}"
+                                       class="w-full px-4 py-3 bg-input-background border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                                <button type="button" onclick="buscarCnpj()"
+                                        class="shrink-0 px-4 py-3 bg-muted border border-border rounded-lg text-card-foreground hover:bg-secondary transition-colors whitespace-nowrap">
+                                    Buscar
+                                </button>
+                            </div>
+                            <p id="cnpjStatus" class="text-xs text-muted-foreground mt-1 h-4"></p>
                         </div>
                         <div>
                             <label class="block text-sm text-card-foreground mb-2">Tipo de Atividade (para o DAS)</label>
-                            <select name="activity_type" class="w-full px-4 py-3 bg-input-background border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary">
+                            <select name="activity_type" id="activityTypeSelect" class="w-full px-4 py-3 bg-input-background border border-border rounded-lg text-card-foreground focus:outline-none focus:ring-2 focus:ring-primary">
                                 @foreach ($atividades as $key => $atv)
                                     <option value="{{ $key }}" {{ old('activity_type', $user->activity_type) === $key ? 'selected' : '' }}>
                                         {{ $atv['label'] }}
                                     </option>
                                 @endforeach
                             </select>
+                            <p class="text-xs text-muted-foreground mt-1">Sugerido automaticamente ao buscar o CNPJ — confira com seu contador.</p>
                         </div>
                         <div>
                             <label class="block text-sm text-card-foreground mb-2">CEP</label>
@@ -217,6 +226,81 @@
         } catch (error) {
             cepStatus.textContent = 'Não foi possível consultar o CEP agora.';
             cepStatus.classList.add('text-red-400');
+        }
+    }
+
+    // Máscara visual do CNPJ (00.000.000/0001-00)
+    const cnpjInput = document.getElementById('cnpjInput');
+    const cnpjStatus = document.getElementById('cnpjStatus');
+    const activityTypeSelect = document.getElementById('activityTypeSelect');
+
+    cnpjInput.addEventListener('input', () => {
+        let value = cnpjInput.value.replace(/\D/g, '').slice(0, 14);
+        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)/, '.$1/$2');
+        value = value.replace(/(\d{4})(\d)/, '$1-$2');
+        cnpjInput.value = value;
+    });
+
+    async function buscarCnpj() {
+        const cnpj = cnpjInput.value.replace(/\D/g, '');
+
+        if (cnpj.length !== 14) {
+            cnpjStatus.textContent = 'Digite um CNPJ válido (14 dígitos).';
+            cnpjStatus.className = 'text-xs text-red-400 mt-1 h-4';
+            return;
+        }
+
+        cnpjStatus.textContent = 'Buscando dados do CNPJ...';
+        cnpjStatus.className = 'text-xs text-muted-foreground mt-1 h-4';
+
+        try {
+            const response = await fetch('{{ route('profile.cnpj.buscar') }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ cnpj }),
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                cnpjStatus.textContent = error.error || 'CNPJ não encontrado.';
+                cnpjStatus.className = 'text-xs text-red-400 mt-1 h-4';
+                return;
+            }
+
+            const data = await response.json();
+
+            if (data.razao_social) {
+                document.querySelector('input[name="company_name"]').value = data.razao_social;
+            }
+            if (data.activity_type) {
+                activityTypeSelect.value = data.activity_type;
+            }
+            if (data.logradouro) {
+                addressInput.value = data.logradouro;
+            }
+            if (data.municipio) {
+                cityInput.value = data.municipio;
+            }
+            if (data.uf) {
+                stateInput.value = data.uf;
+            }
+            if (data.cep) {
+                cepInput.value = data.cep.replace(/(\d{5})(\d{3})/, '$1-$2');
+            }
+
+            cnpjStatus.textContent = data.cnae_descricao
+                ? `Dados encontrados — atividade: ${data.cnae_descricao}`
+                : 'Dados encontrados e preenchidos automaticamente.';
+            cnpjStatus.className = 'text-xs text-emerald-400 mt-1 h-4';
+        } catch (error) {
+            cnpjStatus.textContent = 'Não foi possível consultar o CNPJ agora.';
+            cnpjStatus.className = 'text-xs text-red-400 mt-1 h-4';
         }
     }
 </script>

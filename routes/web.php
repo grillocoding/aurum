@@ -1,10 +1,12 @@
 <?php
-use App\Http\Controllers\LandingController;
+
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\CnpjLookupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DasSimulatorController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\LandingController;
 use App\Http\Controllers\NameSuggestionController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ReportController;
@@ -12,6 +14,7 @@ use App\Http\Controllers\RevenueController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LandingController::class, 'index'])->name('landing');
+
 // Rotas de convidado (não autenticado)
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'create'])->name('login');
@@ -47,4 +50,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/perfil', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/perfil', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/perfil/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
+    Route::post('/perfil/buscar-cnpj', [CnpjLookupController::class, 'buscar'])->name('profile.cnpj.buscar');
 });
