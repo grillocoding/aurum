@@ -36,7 +36,6 @@
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-thumb { background: rgba(201,169,97,0.3); border-radius: 4px; }
     </style>
-    /* Deu erro no meu pc /*
     @stack('styles')
 </head>
 <body class="min-h-screen bg-background">
@@ -85,10 +84,12 @@
         <!-- Main content -->
         <div class="lg:pl-64">
             <header class="sticky top-0 z-30 border-b border-border bg-card px-6 py-4">
-                <div class="flex items-center justify-between">
-                    <div></div>
-                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 text-sm text-muted-foreground hover:text-card-foreground transition-colors">
-                        <span>Sistema de Gestão Financeira para MEI — {{ Auth::user()->name ?? '' }}</span>
+                <div class="flex items-center justify-between gap-4">
+                    <h2 class="text-lg text-card-foreground truncate">
+                        @yield('title', 'AURUM')
+                    </h2>
+                    <a href="{{ route('profile.edit') }}" class="flex items-center gap-3 text-sm text-muted-foreground hover:text-card-foreground transition-colors shrink-0">
+                        <span class="hidden sm:inline">{{ Auth::user()->name ?? '' }}</span>
                         <div class="w-8 h-8 rounded-full overflow-hidden bg-primary flex items-center justify-center text-sm shrink-0">
                             @if (Auth::user()?->avatar)
                                 <img src="{{ Auth::user()->avatar_url }}" alt="Avatar" class="w-full h-full object-cover">
